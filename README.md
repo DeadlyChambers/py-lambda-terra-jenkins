@@ -52,8 +52,10 @@ echo http://127.0.0.1:8080/login
 ```
 
 ## Connecting repo
+TODO: Get some help here
 ### Option 1
 ```
+
 
 ```
 
@@ -68,3 +70,14 @@ docker run -d --name=gogs -p 10022:22 -p 3000:3000 -v ~/gogs-data/gogs:/data gog
 # create a repo, and push the lambda code
 k -n jenkins port-forward "${podname}" 3000:3000
 ```
+
+TODO: What do I need to get Jenkins running the python package, and terraform.
+
+# Lambda Function Package/Deploy
+Running the run.sh script will package the python code into a zip, and then
+use terraform to deploy it
+```
+sh run.sh
+```
+
+TODO: Look into [version python](https://github.com/pypa/sampleproject/blob/main/setup.py)
