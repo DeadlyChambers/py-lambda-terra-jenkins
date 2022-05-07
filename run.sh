@@ -10,16 +10,18 @@ tput setaf 2
 printf "\nDeploy with Terraform\n"
 tput setaf 9
 cd ../terraform || return
+##Create an access key, and you can import it to aws config
 #aws configure import --csv file:///home/shane/tmp/jenkins-deployer.csv
-#AWS_PROFILE=jenkins-deployer
 terraform init
 terraform apply -auto-approve -var created="script"
+function_name=$(terraform output function_name)
 cd ..
 
 tput setaf 2
 printf "\nInvoke Lambda from cli\n"
 tput setaf 9
-aws lambda invoke --function-name "ds-operations-lambda-sns" "response.json"
+
+aws lambda invoke --function-name $function_name response.json
 
 
 tput setaf 2

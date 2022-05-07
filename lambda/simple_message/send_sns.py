@@ -3,9 +3,10 @@
 '''
 from datetime import datetime
 import json
+import pprint
 import boto3
 #TODO Ensure versioning is increment in pipeline
-VERSION = '1.0.3'
+VERSION = '1.0.4'
 
 def lambda_handler(event, context):
     '''
@@ -24,17 +25,30 @@ def lambda_handler(event, context):
     time_format = time.strftime('%H:%M:%S')
     print(time_format)
     subject = f'Jenkins Deployed Lambda Message v{VERSION} - {time_format} from {message}'
-    boto3.client('sns')
-    client = boto3.client('sns')
+    
+    client = boto3.client('sns', region_name='us-east-1')
+    paginator = client.get_paginator('list_topics')
+    page_iterator = paginator.paginate().build_full_result()
+    cur_topic = "na"
+    for page in page_iterator['Topics']:
+        topic_name = page['TopicArn']
+        print(topic_name)
+        if 'ds-operations-lambda-sns' == topic_name:
+            cur_topic = topic_name
+            break
+    if cur_topic == "na":
+        print('Topic not found')
+        return "topic not found"
     client.publish(
         #TODO make this resource to fix the awful naming
-        TargetArn='arn:aws:sns:us-east-1:047476809233:ds-operations-lambda-sns-MySnsTopic-LZYME5CPK0NF',
+        TargetArn=cur_topic,
         Message=json.dumps({'default': 'Testing default python SNS message',
                             'sms': 'Testing sms py SNS message',
                             'email': 'Testing email python SNS message'}),
         Subject = subject,
         MessageStructure='json'
     )
+    print(subject)
     return subject
 
 if __name__ == '__main__':
