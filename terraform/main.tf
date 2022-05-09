@@ -1,5 +1,6 @@
 
 data "aws_caller_identity" "current" {
+
 }
 locals {
   calling_role = data.aws_caller_identity.current.arn
@@ -14,7 +15,7 @@ locals {
 
 provider "aws" {
   region  = "us-east-1"
-  profile = "jenkins-user"
+  profile = var.aws_profile
   default_tags {
     tags = local.tags
   }

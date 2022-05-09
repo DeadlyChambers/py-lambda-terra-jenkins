@@ -17,3 +17,8 @@ variable "email" {
   default = "shanechambers85+slack@gmail.com"
   type    = string
 }
+
+variable "aws_profile" {
+  default = "jenkins-user"
+  type    = string
+}

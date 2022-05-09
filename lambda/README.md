@@ -11,3 +11,7 @@ Ensure you have [pipenv](https://buildmedia.readthedocs.org/media/pdf/pipenv/lat
 pipenv run python3 package.py
 ```
 The zip file created will be what you need to deploy with the terraform script
+
+# Switching to Distribution Best Practices
+Recommended build and package tools
+`python -m pip install setuptools wheel twine`
