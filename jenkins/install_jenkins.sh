@@ -20,12 +20,14 @@ source /etc/profile.d/jenkins.sh
 
 # if you don't have mkfs yum install xfsprogs
 apt update -y
-if ! command -v jenkins &> /dev/null ; 
+if ! command -v jenkins 2> /dev/null ; 
+    then 
     sh -c 'echo deb http://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
-    wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | apt-key add -
-    then apt install jenkins -y ; 
+    wget -q -O - https://pkg.jenkins.io/debian/jenkins.io.key | sudo apt-key add -
+    apt install jenkins -y ; 
 fi
 cat "${JENKINS_HOME}/secrets/initialAdminPassword"
+service jenkins start
 # if [[ -f "$_JENKINS_HOME/jenkins.war" ]]; 
 #     then
 #         #Jenkins already exists on the volume, so you could do

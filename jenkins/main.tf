@@ -29,23 +29,17 @@ resource "aws_security_group" "jenkins_sg" {
 
   ingress {
     description = "Allow Https from VPN"
-    from_port   = 8080
-    to_port     = 8080
-    protocol    = "tcp"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     cidr_blocks = [var.cidr_block, "70.59.19.225/32"]
   }
+
   ingress {
-    description = "Allow SSH from Personal CIDR block"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [var.cidr_block, "70.59.19.225/32"]
-  }
-  ingress {
-    description = "Allow resources with the security group to communicate over 9000"
-    from_port   = -1
-    to_port     = -1
-    protocol    = "tcp"
+    description = "Allow resources with the security group to communicate over any port"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
     self        = true
 
   }
@@ -64,8 +58,9 @@ resource "aws_security_group" "jenkins_sg" {
 }
 
 resource "aws_network_interface" "multi-ip" {
-  subnet_id   = var.subnet_id
-  private_ips = [var.ec2_private_ip]
+  subnet_id       = var.subnet_id
+  private_ips     = [var.ec2_private_ip]
+  security_groups = [resource.aws_security_group.jenkins_sg.id]
   tags = {
     "Name"            = "jenkins-eni"
     "soin:created_by" = local.calling_role
@@ -81,26 +76,6 @@ resource "aws_eip" "myip" {
   }
 }
 
-
-
-
-resource "aws_route" "route" {
-  route_table_id = "rtb-0e0e6acd47a846e8c"
-  nat_gateway_id = aws_nat_gateway.example.id
-}
-
-resource "aws_nat_gateway" "example" {
-  allocation_id = aws_eip.myip
-  subnet_id     = var.subnet_id
-
-
-  tags = {
-    Name              = "default-nat"
-    "soin:created_by" = local.calling_role
-  }
-
-
-}
 resource "aws_iam_role" "jenkins_ec2_instance_profile" {
   name = var.ec2_instance_profile
   assume_role_policy = jsonencode(
@@ -228,13 +203,15 @@ resource "aws_instance" "jenkins_ec2" {
   instance_type = var.instance_type
   key_name      = var.ssh_key_name
 
-  vpc_security_group_ids  = [resource.aws_security_group.jenkins_sg.id]
+
   user_data               = file("install_jenkins.sh")
   availability_zone       = var.az
   disable_api_termination = false
-  subnet_id               = var.subnet_id
   iam_instance_profile    = resource.aws_iam_instance_profile.jenkins_instance_profile.name
-  private_ip              = var.ec2_private_ip
+  network_interface {
+    network_interface_id = aws_network_interface.multi-ip.id
+    device_index         = 0
+  }
   root_block_device {
     delete_on_termination = "false"
     encrypted             = true
@@ -329,7 +306,7 @@ resource "aws_dlm_lifecycle_policy" "jenkins_lifecycle" {
       name = "1 Snapshot every 2 days of Jenkins root volume"
 
       create_rule {
-        interval      = 48
+        interval      = 24
         interval_unit = "HOURS"
         times         = ["23:45"]
       }

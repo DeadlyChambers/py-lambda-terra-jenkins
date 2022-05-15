@@ -21,6 +21,6 @@ variable "email" {
 }
 
 variable "aws_profile" {
-  default = "jenkins-user"
+  default = "terraform-user"
   type    = string
 }

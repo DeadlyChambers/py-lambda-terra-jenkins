@@ -30,6 +30,11 @@ variable "kms_key_ebs_id" {
   type        = string
 }
 
+variable "jenkins_ami" {
+  default = "ami-0a02db0ddc7d8f6e4"
+
+}
+
 
 variable "ssh_key_name" {
   description = "Name of keypair to ssh"
@@ -71,7 +76,7 @@ variable "email" {
 
 variable "aws_profile" {
   description = "Aws Profile used to create resources, will be passed into the tags"
-  default     = "jenkins-user"
+  default     = "terraform-user"
   type        = string
 }
 
