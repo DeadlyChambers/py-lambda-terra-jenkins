@@ -176,52 +176,27 @@ resource "aws_iam_policy" "jenkins_ec2_instance_profile_policy" {
 }
 
 
-data "aws_ami" "ubuntu" {
+data "aws_ami" "my_ami" {
   most_recent = true
-  owners      = ["099720109477"]
+  owners      = ["self"]
+
   filter {
     name   = "name"
-    values = ["ubuntu/images/hvm-ssd/ubuntu-focal-20.04*"]
+    values = ["jenkins-soinshane-ec2"]
   }
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-  filter {
-    name   = "architecture"
-    values = ["x86_64"]
-  }
-
 }
 
 resource "aws_instance" "jenkins_ec2" {
-  ami           = data.aws_ami.ubuntu.id
-  instance_type = var.instance_type
-  key_name      = var.ssh_key_name
-
-
-  user_data               = file("install_jenkins.sh")
-  availability_zone       = var.az
-  disable_api_termination = false
-  iam_instance_profile    = resource.aws_iam_instance_profile.jenkins_instance_profile.name
+  ami                  = data.aws_ami.my_ami
+  instance_type        = var.instance_type
+  key_name             = var.ssh_key_name
+  availability_zone    = var.az
+  iam_instance_profile = resource.aws_iam_instance_profile.jenkins_instance_profile.name
   network_interface {
     network_interface_id = aws_network_interface.multi-ip.id
     device_index         = 0
   }
-  root_block_device {
-    delete_on_termination = "false"
-    encrypted             = true
-    volume_size           = 20
-    kms_key_id            = local.kms_key_ebs
-    tags = {
-      Name                    = "jenkins-master-ebs"
-      "soin:lifecycle_policy" = "jenkins"
-    }
-  }
+
   tags = {
     Name              = var.instance_name
     "soin:created_by" = local.calling_role
