@@ -1,18 +1,20 @@
 variable "created" {
-  default = "manual"
+  default = "jenkins"
   type    = string
 }
 
 variable "sns_name" {
-  default = "ds-operations-lambda-sns-topic"
+  default = "soinshane-lambda-sns-topic"
   type    = string
 }
 
 variable "sns_role" {
-  default = "ds-operations-lambda-sns-role"
+  default = "soinshane-lambda-sns-role"
   type    = string
 }
-
+variable "lambda_function_name" {
+  default = "soinshane-lambda-for-sns"
+}
 variable "email" {
   default = "shanechambers85+slack@gmail.com"
   type    = string

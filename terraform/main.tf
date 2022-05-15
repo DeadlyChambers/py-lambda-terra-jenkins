@@ -5,11 +5,11 @@ data "aws_caller_identity" "current" {
 locals {
   calling_role = data.aws_caller_identity.current.arn
   tags = {
-    "ds:owned_by"   = "devops"
-    "ds:contact"    = var.email
-    "ds:created"    = var.created
-    "ds:operations" = "restrict"
-    "ds:git_repo"   = "https://bitbucket.org/datassential/jenkins/src/master/"
+    "soin:owned_by"   = "devops"
+    "soin:contact"    = var.email
+    "soin:created"    = var.created
+    "soin:operations" = "restrict"
+    "soin:git_repo"   = "git@github.com:DeadlyChambers/py-lambda-terra-jenkins.git"
   }
 }
 
@@ -21,18 +21,21 @@ provider "aws" {
   }
 }
 
-resource "aws_sns_topic" "ds_sns_topic" {
+resource "aws_sns_topic" "soinshane_sns_topic" {
   name = var.sns_name
-  tags = { "ds:created_by" = local.calling_role }
+  tags = {
+    Name              = var.sns_name
+    "soin:created_by" = local.calling_role
+  }
 }
 
-resource "aws_sns_topic_policy" "ds_sns_topic_policy" {
-  arn    = aws_sns_topic.ds_sns_topic.arn
-  policy = data.aws_iam_policy_document.ds_sns_topic_policy_document.json
-  #tags   = { "ds:created_by" = local.calling_role }
+resource "aws_sns_topic_policy" "soinshane_sns_topic_policy" {
+  arn    = aws_sns_topic.soinshane_sns_topic.arn
+  policy = data.aws_iam_policy_document.soinshane_sns_topic_policy_document.json
+  #tags   = { "soin:created_by" = local.calling_role }
 }
 
-data "aws_iam_policy_document" "ds_sns_topic_policy_document" {
+data "aws_iam_policy_document" "soinshane_sns_topic_policy_document" {
   policy_id = "__default_policy_ID"
 
   statement {
@@ -65,24 +68,24 @@ data "aws_iam_policy_document" "ds_sns_topic_policy_document" {
     }
 
     resources = [
-      resource.aws_sns_topic.ds_sns_topic.arn,
+      resource.aws_sns_topic.soinshane_sns_topic.arn,
     ]
 
     sid = "__default_statement_ID"
 
   }
-  #tags = { "ds:created_by" = local.calling_role }
+  #tags = { "soin:created_by" = local.calling_role }
 }
 
 resource "aws_sns_topic_subscription" "sns-topic" {
-  topic_arn = resource.aws_sns_topic.ds_sns_topic.arn
+  topic_arn = resource.aws_sns_topic.soinshane_sns_topic.arn
   protocol  = "email"
   endpoint  = var.email
 
-  #tags      = { "ds:created_by" = local.calling_role }
+  #tags      = { "soin:created_by" = local.calling_role }
 }
 
-resource "aws_iam_role" "ds_operations_lambda_sns_role" {
+resource "aws_iam_role" "soinshane_lambda_sns_role" {
   name = var.sns_role
   assume_role_policy = jsonencode(
     {
@@ -94,15 +97,15 @@ resource "aws_iam_role" "ds_operations_lambda_sns_role" {
             "Service" : "lambda.amazonaws.com"
           },
           "Effect" : "Allow",
-          "Sid" : "ds-sns-assume-role"
+          "Sid" : "soinshane-sns-assume-role"
         }
       ]
   })
-  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole", aws_iam_policy.ds_operations_lambda_role_policy.arn]
-  tags                = { "ds:created_by" = local.calling_role }
+  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole", aws_iam_policy.soinshane_lambda_role_policy.arn]
+  tags                = { "soin:created_by" = local.calling_role }
 }
 
-resource "aws_iam_policy" "ds_operations_lambda_role_policy" {
+resource "aws_iam_policy" "soinshane_lambda_role_policy" {
   policy = jsonencode(
     {
       "Version" : "2012-10-17"
@@ -116,23 +119,25 @@ resource "aws_iam_policy" "ds_operations_lambda_role_policy" {
         }
       ]
   })
-  tags = { "ds:created_by" = local.calling_role }
+  tags = {
+    Name = "soinshane-lambda-role-policy"
+  "soin:created_by" = local.calling_role }
 }
 
-resource "aws_lambda_function" "ds_operations_lambda" {
+resource "aws_lambda_function" "soinshane_lambda" {
   filename         = "../lambda/simple-message-lambda.zip"
-  function_name    = "ds-operations-lambda-sns"
-  role             = aws_iam_role.ds_operations_lambda_sns_role.arn
+  function_name    = var.lambda_function_name
+  role             = aws_iam_role.soinshane_lambda_sns_role.arn
   handler          = "send_sns.lambda_handler"
   description      = "Lambda function packaged and deployed from CICD that just sends a message to an SNS topic"
   source_code_hash = filebase64sha256("../lambda/simple-message-lambda.zip")
   runtime          = "python3.9"
-  tags             = { "ds:created_by" = local.calling_role }
+  tags             = { "soin:created_by" = local.calling_role }
 }
 
 
 output "function_name" {
   description = "The name of the Lambda function created"
-  value       = resource.aws_lambda_function.ds_operations_lambda.function_name
+  value       = resource.aws_lambda_function.soinshane_lambda.function_name
 }
 
