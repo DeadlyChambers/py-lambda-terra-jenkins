@@ -187,11 +187,12 @@ data "aws_ami" "my_ami" {
 }
 
 resource "aws_instance" "jenkins_ec2" {
-  ami                  = data.aws_ami.my_ami
+  ami                  = data.aws_ami.my_ami.id
   instance_type        = var.instance_type
   key_name             = var.ssh_key_name
   availability_zone    = var.az
   iam_instance_profile = resource.aws_iam_instance_profile.jenkins_instance_profile.name
+  #some of this stuff might get dropped once going to an ami
   network_interface {
     network_interface_id = aws_network_interface.multi-ip.id
     device_index         = 0
@@ -311,3 +312,12 @@ resource "aws_dlm_lifecycle_policy" "jenkins_lifecycle" {
   }
 }
 
+output "jenkins_login_url" {
+  description = "Login for Jenkins"
+  value       = "http://${resource.aws_instance.jenkins_ec2.public_ip}:8080/login"
+}
+
+output "ec2_instance_id" {
+  description = "Id of instance for shutdown"
+  value       = resource.aws_instance.jenkins_ec2.id
+}
